@@ -1,0 +1,21 @@
+========================================
+    STUDENT PERFORMANCE REPORT
+========================================
+
+Student Information:
+  ID: 23112007, Name: Pawan Chavan
+
+--- ATTENDANCE SUMMARY ---
+  Total Classes: 2
+  Present Days: 2
+  Attendance: 100.00%
+  Status: GOOD ATTENDANCE ✓
+
+--- ACADEMIC SUMMARY ---
+  Total Tests: 3
+  Average Marks: 99.00
+  Grade: A+
+
+========================================
+  Report generated successfully!
+========================================

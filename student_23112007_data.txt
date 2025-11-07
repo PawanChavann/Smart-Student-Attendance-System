@@ -1,0 +1,20 @@
+=== STUDENT DATA ===
+ID: 23112007, Name: Pawan Chavan
+
+=== ATTENDANCE RECORDS ===
+Day 1: Present
+Day 2: Present
+Day 3: Absent
+Day 4: Absent
+Day 5: Present
+
+Total Classes: 5
+Present Days: 3
+Attendance Percentage: 60.00%
+
+=== MARKS RECORDS ===
+Test 1: 99
+Test 2: 98
+Test 3: 100
+
+Average Marks: 99.00

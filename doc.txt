@@ -1,0 +1,552 @@
+# Smart Student Attendance & Report System
+## Complete Java Project Documentation
+
+**Student Name:** Pawan Chavan, Abhay Gore 
+**Course:** FJP  
+
+---
+
+## Project Overview
+
+This project implements a Smart Student Attendance & Report System using core Java concepts including:
+- Interface Implementation
+- Inheritance
+- File Handling
+- Exception Handling
+- Multithreading
+
+---
+
+## 1. Saveable.java (Interface)
+
+```java
+public interface Saveable {
+    void saveToFile() throws Exception;
+}
+```
+
+**Purpose:** Defines a contract for classes that can save their data to files.
+
+---
+
+## 2. Person.java (Base Class)
+
+```java
+public class Person {
+    protected String name;
+    protected int id;
+
+    public Person(String name, int id) {
+        this.name = name;
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    @Override
+    public String toString() {
+        return "ID: " + id + ", Name: " + name;
+    }
+}
+```
+
+**Purpose:** Base class containing common properties for all persons. Demonstrates inheritance concept.
+
+---
+
+## 3. Student.java (Derived Class)
+
+```java
+import java.io.FileWriter;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
+
+public class Student extends Person implements Saveable {
+    private List<Boolean> attendanceRecords;
+    private List<Integer> marks;
+
+    public Student(String name, int id) {
+        super(name, id);
+        this.attendanceRecords = new ArrayList<>();
+        this.marks = new ArrayList<>();
+    }
+
+    public void markAttendance(boolean isPresent) {
+        attendanceRecords.add(isPresent);
+    }
+
+    public void addMarks(int mark) throws InvalidMarksException {
+        if (mark < 0 || mark > 100) {
+            throw new InvalidMarksException("Marks must be between 0 and 100. Received: " + mark);
+        }
+        marks.add(mark);
+    }
+
+    public int getTotalClasses() {
+        return attendanceRecords.size();
+    }
+
+    public int getPresentDays() {
+        int count = 0;
+        for (boolean present : attendanceRecords) {
+            if (present) count++;
+        }
+        return count;
+    }
+
+    public double getAttendancePercentage() {
+        if (attendanceRecords.isEmpty()) return 0.0;
+        return (getPresentDays() * 100.0) / getTotalClasses();
+    }
+
+    public double getAverageMarks() {
+        if (marks.isEmpty()) return 0.0;
+        int sum = 0;
+        for (int mark : marks) {
+            sum += mark;
+        }
+        return sum / (double) marks.size();
+    }
+
+    public List<Boolean> getAttendanceRecords() {
+        return attendanceRecords;
+    }
+
+    public List<Integer> getMarks() {
+        return marks;
+    }
+
+    @Override
+    public void saveToFile() throws Exception {
+        try (PrintWriter writer = new PrintWriter(new FileWriter("student_" + id + "_data.txt"))) {
+            writer.println("=== STUDENT DATA ===");
+            writer.println(toString());
+            writer.println("\n=== ATTENDANCE RECORDS ===");
+            for (int i = 0; i < attendanceRecords.size(); i++) {
+                writer.println("Day " + (i + 1) + ": " + (attendanceRecords.get(i) ? "Present" : "Absent"));
+            }
+            writer.println("\nTotal Classes: " + getTotalClasses());
+            writer.println("Present Days: " + getPresentDays());
+            writer.println("Attendance Percentage: " + String.format("%.2f", getAttendancePercentage()) + "%");
+            
+            writer.println("\n=== MARKS RECORDS ===");
+            for (int i = 0; i < marks.size(); i++) {
+                writer.println("Test " + (i + 1) + ": " + marks.get(i));
+            }
+            writer.println("\nAverage Marks: " + String.format("%.2f", getAverageMarks()));
+        }
+    }
+
+    @Override
+    public String toString() {
+        return super.toString();
+    }
+}
+```
+
+**Purpose:** Extends Person class and implements Saveable interface. Manages student attendance and marks with file operations.
+
+---
+
+## 4. InvalidMarksException.java (Custom Exception)
+
+```java
+public class InvalidMarksException extends Exception {
+    public InvalidMarksException(String message) {
+        super(message);
+    }
+}
+```
+
+**Purpose:** Custom exception for handling invalid marks input. Demonstrates exception handling.
+
+---
+
+## 5. AttendanceThread.java (Multithreading)
+
+```java
+public class AttendanceThread extends Thread {
+    private Student student;
+    private boolean[] attendanceData;
+
+    public AttendanceThread(Student student, boolean[] attendanceData) {
+        this.student = student;
+        this.attendanceData = attendanceData;
+    }
+
+    @Override
+    public void run() {
+        System.out.println("\n[Attendance Thread] Starting attendance marking for " + student.getName());
+        try {
+            for (int i = 0; i < attendanceData.length; i++) {
+                student.markAttendance(attendanceData[i]);
+                System.out.println("[Attendance Thread] Day " + (i + 1) + ": " + 
+                                 (attendanceData[i] ? "Present" : "Absent"));
+                Thread.sleep(500); // Simulate processing time
+            }
+            System.out.println("[Attendance Thread] Attendance marking completed!");
+        } catch (InterruptedException e) {
+            System.err.println("Attendance thread interrupted: " + e.getMessage());
+        }
+    }
+}
+```
+
+**Purpose:** Thread for marking attendance concurrently. Demonstrates multithreading concept.
+
+---
+
+## 6. ReportThread.java (Multithreading)
+
+```java
+import java.io.FileWriter;
+import java.io.PrintWriter;
+
+public class ReportThread extends Thread {
+    private Student student;
+
+    public ReportThread(Student student) {
+        this.student = student;
+    }
+
+    @Override
+    public void run() {
+        System.out.println("\n[Report Thread] Starting report generation for " + student.getName());
+        try {
+            // Wait a bit to ensure some data is available
+            Thread.sleep(1000);
+            
+            String filename = "student_" + student.getId() + "_report.txt";
+            try (PrintWriter writer = new PrintWriter(new FileWriter(filename))) {
+                writer.println("========================================");
+                writer.println("    STUDENT PERFORMANCE REPORT");
+                writer.println("========================================");
+                writer.println("\nStudent Information:");
+                writer.println("  " + student.toString());
+                
+                writer.println("\n--- ATTENDANCE SUMMARY ---");
+                writer.println("  Total Classes: " + student.getTotalClasses());
+                writer.println("  Present Days: " + student.getPresentDays());
+                writer.println("  Attendance: " + String.format("%.2f", student.getAttendancePercentage()) + "%");
+                
+                if (student.getAttendancePercentage() >= 75) {
+                    writer.println("  Status: GOOD ATTENDANCE ✓");
+                } else {
+                    writer.println("  Status: LOW ATTENDANCE ⚠");
+                }
+                
+                writer.println("\n--- ACADEMIC SUMMARY ---");
+                writer.println("  Total Tests: " + student.getMarks().size());
+                writer.println("  Average Marks: " + String.format("%.2f", student.getAverageMarks()));
+                
+                double avg = student.getAverageMarks();
+                String grade;
+                if (avg >= 90) grade = "A+";
+                else if (avg >= 80) grade = "A";
+                else if (avg >= 70) grade = "B";
+                else if (avg >= 60) grade = "C";
+                else if (avg >= 50) grade = "D";
+                else grade = "F";
+                
+                writer.println("  Grade: " + grade);
+                
+                writer.println("\n========================================");
+                writer.println("  Report generated successfully!");
+                writer.println("========================================");
+            }
+            
+            System.out.println("[Report Thread] Report saved to: " + filename);
+            Thread.sleep(500);
+            System.out.println("[Report Thread] Report generation completed!");
+            
+        } catch (Exception e) {
+            System.err.println("Error generating report: " + e.getMessage());
+        }
+    }
+}
+```
+
+**Purpose:** Thread for generating performance reports concurrently. Works simultaneously with AttendanceThread.
+
+---
+
+## 7. AttendanceSystem.java (Main Program)
+
+```java
+import java.util.Scanner;
+
+public class AttendanceSystem {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        
+        try {
+            System.out.println("╔════════════════════════════════════════════╗");
+            System.out.println("║  SMART STUDENT ATTENDANCE & REPORT SYSTEM  ║");
+            System.out.println("╚════════════════════════════════════════════╝");
+            
+            // Get student details
+            System.out.print("\nEnter Student Name: ");
+            String name = scanner.nextLine();
+            
+            int id = 0;
+            boolean validId = false;
+            while (!validId) {
+                try {
+                    System.out.print("Enter Student ID: ");
+                    id = Integer.parseInt(scanner.nextLine());
+                    if (id <= 0) {
+                        System.out.println("Error: ID must be a positive number!");
+                    } else {
+                        validId = true;
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println("Error: Please enter a valid number for ID!");
+                }
+            }
+            
+            Student student = new Student(name, id);
+            System.out.println("\n✓ Student created successfully!");
+            
+            // Get number of days for attendance
+            int days = 0;
+            boolean validDays = false;
+            while (!validDays) {
+                try {
+                    System.out.print("\nEnter number of days to mark attendance: ");
+                    days = Integer.parseInt(scanner.nextLine());
+                    if (days <= 0) {
+                        System.out.println("Error: Number of days must be positive!");
+                    } else {
+                        validDays = true;
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println("Error: Please enter a valid number!");
+                }
+            }
+            
+            // Collect attendance data
+            boolean[] attendanceData = new boolean[days];
+            System.out.println("\nMark attendance (P for Present, A for Absent):");
+            for (int i = 0; i < days; i++) {
+                boolean validInput = false;
+                while (!validInput) {
+                    System.out.print("Day " + (i + 1) + ": ");
+                    String input = scanner.nextLine().trim().toUpperCase();
+                    if (input.equals("P")) {
+                        attendanceData[i] = true;
+                        validInput = true;
+                    } else if (input.equals("A")) {
+                        attendanceData[i] = false;
+                        validInput = true;
+                    } else {
+                        System.out.println("Error: Please enter 'P' or 'A' only!");
+                    }
+                }
+            }
+            
+            // Get number of test marks
+            int numTests = 0;
+            boolean validTests = false;
+            while (!validTests) {
+                try {
+                    System.out.print("\nEnter number of tests: ");
+                    numTests = Integer.parseInt(scanner.nextLine());
+                    if (numTests <= 0) {
+                        System.out.println("Error: Number of tests must be positive!");
+                    } else {
+                        validTests = true;
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println("Error: Please enter a valid number!");
+                }
+            }
+            
+            // Collect marks
+            System.out.println("\nEnter marks (0-100):");
+            for (int i = 0; i < numTests; i++) {
+                boolean validMarks = false;
+                while (!validMarks) {
+                    try {
+                        System.out.print("Test " + (i + 1) + ": ");
+                        int marks = Integer.parseInt(scanner.nextLine());
+                        student.addMarks(marks);
+                        validMarks = true;
+                    } catch (NumberFormatException e) {
+                        System.out.println("Error: Please enter a valid number!");
+                    } catch (InvalidMarksException e) {
+                        System.out.println("Error: " + e.getMessage());
+                    }
+                }
+            }
+            
+            System.out.println("\n" + "=".repeat(50));
+            System.out.println("PROCESSING DATA USING MULTITHREADING...");
+            System.out.println("=".repeat(50));
+            
+            // Create and start threads
+            AttendanceThread attendanceThread = new AttendanceThread(student, attendanceData);
+            ReportThread reportThread = new ReportThread(student);
+            
+            attendanceThread.start();
+            reportThread.start();
+            
+            // Wait for both threads to complete
+            attendanceThread.join();
+            reportThread.join();
+            
+            System.out.println("\n" + "=".repeat(50));
+            System.out.println("ALL OPERATIONS COMPLETED!");
+            System.out.println("=".repeat(50));
+            
+            // Save student data to file
+            System.out.println("\nSaving complete student data...");
+            student.saveToFile();
+            System.out.println("✓ Data saved to: student_" + student.getId() + "_data.txt");
+            
+            // Display summary
+            System.out.println("\n╔════════════════════════════════════════════╗");
+            System.out.println("║            QUICK SUMMARY                   ║");
+            System.out.println("╚════════════════════════════════════════════╝");
+            System.out.println("Student: " + student.getName() + " (ID: " + student.getId() + ")");
+            System.out.println("Attendance: " + String.format("%.2f", student.getAttendancePercentage()) + "%");
+            System.out.println("Average Marks: " + String.format("%.2f", student.getAverageMarks()));
+            System.out.println("\nFiles generated:");
+            System.out.println("  • student_" + student.getId() + "_data.txt (Complete data)");
+            System.out.println("  • student_" + student.getId() + "_report.txt (Performance report)");
+            
+        } catch (Exception e) {
+            System.err.println("\nAn unexpected error occurred: " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            scanner.close();
+            System.out.println("\n✓ System closed successfully!");
+        }
+    }
+}
+```
+
+**Purpose:** Main class that coordinates the entire system, handles user input, and manages thread execution.
+
+---
+
+## Concepts Demonstrated
+
+### 1. Interface
+- `Saveable` interface defines a contract for file operations
+- Implemented by `Student` class
+
+### 2. Inheritance
+- `Student` class extends `Person` class
+- Inherits properties: name, id
+- Demonstrates "is-a" relationship
+
+### 3. File Handling
+- Uses `FileWriter` and `PrintWriter` for file operations
+- Generates two types of files:
+  - Student data file (complete records)
+  - Performance report file (formatted report)
+
+### 4. Exception Handling
+- Custom exception: `InvalidMarksException`
+- Handles NumberFormatException for invalid input
+- Try-catch blocks for robust error handling
+- Resource management using try-with-resources
+
+### 5. Multithreading
+- `AttendanceThread`: Marks attendance concurrently
+- `ReportThread`: Generates reports simultaneously
+- Both threads work independently but synchronize at completion
+- Demonstrates concurrent processing
+
+---
+
+## How to Compile and Run
+
+### Compilation:
+```bash
+javac *.java
+```
+
+### Execution:
+```bash
+java AttendanceSystem
+```
+
+---
+
+## Sample Input/Output
+
+### Sample Input:
+```
+Enter Student Name: John Doe
+Enter Student ID: 101
+Enter number of days to mark attendance: 5
+Day 1: P
+Day 2: P
+Day 3: A
+Day 4: P
+Day 5: P
+Enter number of tests: 3
+Test 1: 85
+Test 2: 90
+Test 3: 78
+```
+
+### Expected Output:
+- Console output showing thread operations
+- Two generated files:
+  - `student_101_data.txt`
+  - `student_101_report.txt`
+
+---
+
+## Features
+
+✓ User-friendly interface with proper validation  
+✓ Concurrent processing using multithreading  
+✓ Automatic grade calculation  
+✓ Attendance percentage calculation  
+✓ Comprehensive error handling  
+✓ File-based data persistence  
+✓ Formatted report generation  
+
+---
+
+## Project Structure
+
+```
+StudentAttendanceSystem/
+│
+├── Saveable.java              (Interface)
+├── Person.java                (Base Class)
+├── Student.java               (Derived Class)
+├── InvalidMarksException.java (Custom Exception)
+├── AttendanceThread.java      (Thread 1)
+├── ReportThread.java          (Thread 2)
+└── AttendanceSystem.java      (Main Program)
+```
+
+---
+
+## Conclusion
+
+This project successfully demonstrates core Java programming concepts including OOP principles, file handling, exception management, and concurrent programming. The system provides a practical solution for managing student attendance and academic performance with automated report generation.
+
+---
+
+**End of Documentation**
